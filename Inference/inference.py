@@ -13,14 +13,14 @@ class LLM:
       torch_dtype=torch.float16,
     ).to(device)
 
-    self.messages = list()
+    self.history = list()
     self.reset()
 
-  def reset(self, system_prompt: str = ""):
-    self.messages = [
+  def reset(self):
+    self.history = [
       {
         "role": "system",
-        "content": system_prompt if system_prompt else self.system_prompt
+        "content": self.system_prompt
       },
     ]
 
@@ -31,29 +31,31 @@ class LLM:
     temperature: int = 0.7,
     top_p = 0.9
   ):
-    self.messages.append({"role": "user", "content": prompt})
+    message = {"role": "user", "content": prompt}
+    self.history.append(message)
 
-    text = self.tokenizer.apply_chat_template(
-      self.messages,
+    chat = self.tokenizer.apply_chat_template(
+      self.history,
       tokenize=False,
       add_generation_prompt=True
     )
-    inputs = self.tokenizer(text, return_tensors="pt").to(self.device)
-
+    request = self.tokenizer(chat, return_tensors="pt").to(self.device)
     with torch.no_grad():
       outputs = self.model.generate(
-        **inputs,
+        **request,
         max_new_tokens=max_new_tokens,
         temperature=temperature,
         top_p=top_p
       )
     response = self.tokenizer.decode(
-        outputs[0][inputs.input_ids.shape[-1]:],
+        outputs[0][request.input_ids.shape[-1]:],
         skip_special_tokens=True
     )
 
-    self.messages.append({"role": "assistant", "content": response})
-    return response
+    reply = {"role": "assistant", "content": response}
+    self.histroy.append(reply)
+
+    return reply["content"]
   
 
 if __name__ == "__main__":

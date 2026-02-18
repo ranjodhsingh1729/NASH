@@ -1,5 +1,6 @@
-import os
 from groq import Groq
+from generation.env import GROQ_API_KEY
+
 
 class Client:
     def __init__(
@@ -11,9 +12,7 @@ class Client:
         self.model = model
         self.max_tokens = max_tokens
         self.system_prompt = system_prompt
-        self.client = Groq(
-            api_key = os.environ.get("GROQ_API_KEY")
-        )
+        self.client = Groq(api_key=GROQ_API_KEY)
 
         self.history = list()
 
@@ -43,7 +42,7 @@ class Client:
 
 if __name__ == "__main__":
     client = Client(
-        "Qwen/Qwen3-32B",
+        "openai/gpt-oss-120b",
         "You are a helpful assistant."
     )
 
