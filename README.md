@@ -1,5 +1,7 @@
 # NASH (B.Tech Minor Project)
 
+Not Again SHell
+
 ## TODO
   - [ ] Documentation
   - [ ] Sandbox Wrapper
