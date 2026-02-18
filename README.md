@@ -3,7 +3,7 @@
 ## TODO
   - [ ] Documentation
   - [ ] Sandbox Wrapper
-  - [ ] Inference Wrapper
+  - [X] Inference Wrapper
   - [ ] Supervised FineTuning
   - [ ] Reinforcement FineTuning
   - [ ] Synthetic Dataset Generation
