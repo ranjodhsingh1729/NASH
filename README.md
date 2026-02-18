@@ -9,5 +9,5 @@ Not Again SHell
   - [X] Inference Wrapper
   - [ ] Supervised FineTuning
   - [ ] Reinforcement FineTuning
-  - [ ] Synthetic Dataset Generation
+  - [ ] Synthetic Dataset Generation (In Progress)
 
