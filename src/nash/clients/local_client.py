@@ -2,36 +2,39 @@ import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 
-class LLM:
-  def __init__(self, model_name: str, device: str, system_prompt: str):
+class LocalClient:
+  def __init__(
+    self,
+    model_name: str,
+    device_name: str,
+    system_prompt: str,
+    top_p: float = 0.9,
+    temperature: float = 0.7,
+    max_tokens: int = 100,
+  ):
     self.model_name = model_name
-    self.device = torch.device(device)
+    self.device_name = device_name
     self.system_prompt = system_prompt
+    self.top_p = top_p
+    self.temperature = temperature
+    self.max_tokens = max_tokens
+
+    self.device = torch.device(self.device_name)
     self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-    self.model = AutoModelForCausalLM.from_pretrained(
-      model_name,
-      torch_dtype=torch.float16,
-    ).to(device)
+    self.client = AutoModelForCausalLM.from_pretrained(
+      model_name, torch_dtype=torch.float16
+    ).to(self.device)
 
     self.history = list()
     self.reset()
 
   def reset(self):
     self.history = [
-      {
-        "role": "system",
-        "content": self.system_prompt
-      },
+      {"role": "system", "content": self.system_prompt},
     ]
 
-  def generate(
-    self,
-    prompt: str,
-    max_new_tokens: int = 100,
-    temperature: int = 0.7,
-    top_p = 0.9
-  ):
-    message = {"role": "user", "content": prompt}
+  def generate(self, input: str):
+    message = {"role": "user", "content": input}
     self.history.append(message)
 
     chat = self.tokenizer.apply_chat_template(
@@ -41,11 +44,11 @@ class LLM:
     )
     request = self.tokenizer(chat, return_tensors="pt").to(self.device)
     with torch.no_grad():
-      outputs = self.model.generate(
+      outputs = self.client.generate(
         **request,
-        max_new_tokens=max_new_tokens,
-        temperature=temperature,
-        top_p=top_p
+        max_new_tokens=self.max_tokens,
+        temperature=self.temperature,
+        top_p=self.top_p
       )
     response = self.tokenizer.decode(
         outputs[0][request.input_ids.shape[-1]:],
@@ -53,13 +56,12 @@ class LLM:
     )
 
     reply = {"role": "assistant", "content": response}
-    self.histroy.append(reply)
-
+    self.history.append(reply)
     return reply["content"]
   
 
 if __name__ == "__main__":
-  model = LLM(
+  model = LocalClient(
     "Qwen/Qwen2-1.5B-Instruct",
     "xpu",
     "You are a helpful assistant.",
@@ -69,4 +71,5 @@ if __name__ == "__main__":
     prompt = input("Prompt: ")
     if prompt == "exit()":
       break
-    print("Reponse: ", model.generate(prompt))
+    print("Reponse: ")
+    print(model.generate(prompt))

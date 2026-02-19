@@ -1,19 +1,4 @@
-# IDEAS
-
-## Current
-
-1) REQUIREMENTS?, SETUP COMMAND, SETUP VERIFICATION COMMAND, SOLUTION VERIFICATION COMMAND
-  - REQUIREMENTS CAN GO INSIDE SETUP COMMAND
-
-2) APPEND SUMMARY LIST OF PERVIOUSLY GENERATED COMMANDS INTO THE NEXT ITTERATION OF THE LOOP
-
-3) FIRST TRY UNSTRUCTURED OUTPUT BY SIMPLY GIVING THE FORMAT IN THE PROMPT! IF WE GET LARGE NUMBER OF PARSING ERRORS THEN WE SHIFT TO JSON FORMATTED OUTPUT
-
-
-## PROMPTS:
-
-### GENERATOR:
-
+GENERATOR_PROMPT = """
 You are a bash task generator assistant. Your goal is to create a novel, and challenging bash task for an Ubuntu-like environment.
 The task draws inspiration from the following seed tasks without copying it verbatim, remaining novel and of comparable difficulty.
 
@@ -24,13 +9,13 @@ Success Condition: {success_1}
 
 Seed Task 2:
 Task Description: {task_2}
-Setup Command: {setup_2}
+Setup Commands: {setup_2}
 Success Condition: {success_2}
 
 Please follow the steps below to create the shell task:
 1) Carefully read Seed Task 1 and Seed Task 2. Identify and list all main elements from these tasks (e.g., types of operations, environment assumptions, verification style).
 2) Develop a comprehensive plan based on the Main Elements List from Step 1. This plan will guide the generation of the new shell task that is similar in quality and complexity to the original tasks, including a task description, a setup command, and a success condition. Ensure:
-  - The setup command prepares the environment (e.g., create files/directories) and execute successfully.
+  - The setup commands prepare the environment (e.g., create files/directories) and execute successfully.
   - The success condition executes successfully if and only if the task has been solved successfully.
 3) Execute the plan step by step and provide the new task components.
 
@@ -40,9 +25,9 @@ Please reply strictly in the following format:
 <task_description>Task Description Goes Here</task_description>
 <setup_command>Setup Command Goes Here</setup>
 <success_condition>Success Condition Goes Here</success_condition>
+"""
 
-
-### SOLVER:
+SOLVER_PROMPT = """
 You are an expert Linux shell user operating in an Ubuntu-like environment.
 Your goal is to solve the given bash task step-by-step by issuing one shell command at a time.
 You can use the TASK and SHELL HISTORY given below:
@@ -71,3 +56,4 @@ Completion Rule:
 Please reply strictly in the following format:
 <reasoning>Reasoning goes here</reasoning>
 <command>Command goes here</command>
+"""
