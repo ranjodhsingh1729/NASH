@@ -10,7 +10,7 @@ class LocalClient:
     system_prompt: str,
     top_p: float = 0.9,
     temperature: float = 0.7,
-    max_tokens: int = 100,
+    max_tokens: int = 1000,
   ):
     self.model_name = model_name
     self.device_name = device_name
@@ -22,7 +22,7 @@ class LocalClient:
     self.device = torch.device(self.device_name)
     self.tokenizer = AutoTokenizer.from_pretrained(model_name)
     self.client = AutoModelForCausalLM.from_pretrained(
-      model_name, torch_dtype=torch.float16
+      model_name, dtype=torch.float16
     ).to(self.device)
 
     self.history = list()
@@ -62,7 +62,7 @@ class LocalClient:
 
 if __name__ == "__main__":
   model = LocalClient(
-    "Qwen/Qwen2-1.5B-Instruct",
+    "Qwen/Qwen2.5-0.5B-Instruct",
     "xpu",
     "You are a helpful assistant.",
   )

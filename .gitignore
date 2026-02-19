@@ -3,7 +3,6 @@ venv/
 temp.txt
 zemp.txt
 
-**.env**
 **env.py**
 
 __pycache__/

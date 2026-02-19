@@ -9,7 +9,7 @@ class CloudClient:
     system_prompt: str,
     top_p: float = 0.9,
     temperature: float = 0.7,
-    max_tokens: int = 100,
+    max_tokens: int = None,
   ):
     self.model_name = model_name
     self.system_prompt = system_prompt
@@ -25,6 +25,26 @@ class CloudClient:
     self.history = [
       {"role": "system","content": self.system_prompt}
     ]
+
+  def _generate(self, input):
+    message = {"role": "user", "content": input}
+    self.history.append(message)
+
+    response = self.client.chat.completions.create(
+      model = self.model_name,
+      messages = self.history,
+      max_tokens = self.max_tokens,
+      top_p = self.top_p,
+      temperature = self.temperature,
+    )
+
+    reply = {
+      "role": "assistant",
+      "content": response.choices[0].message.content
+    }
+
+    self.history.pop()
+    return reply["content"]
 
   def generate(self, input: str):
     message = {"role": "user", "content": input}
