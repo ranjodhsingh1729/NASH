@@ -1,3 +1,4 @@
+import json
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
@@ -33,16 +34,15 @@ class LocalClient:
       {"role": "system", "content": self.system_prompt},
     ]
 
-  def generate(self, input: str):
-    message = {"role": "user", "content": input}
-    self.history.append(message)
-
+  def _request(self, messages):
     chat = self.tokenizer.apply_chat_template(
-      self.history,
+      messages,
       tokenize=False,
       add_generation_prompt=True
     )
-    request = self.tokenizer(chat, return_tensors="pt").to(self.device)
+    request = self.tokenizer(
+      chat, return_tensors="pt"
+    ).to(self.device)
     with torch.no_grad():
       outputs = self.client.generate(
         **request,
@@ -54,11 +54,26 @@ class LocalClient:
         outputs[0][request.input_ids.shape[-1]:],
         skip_special_tokens=True
     )
+    return response
 
-    reply = {"role": "assistant", "content": response}
-    self.history.append(reply)
-    return reply["content"]
-  
+  def generate_once(self, input):
+    """
+    One-shot generation (does not update history)
+    """
+    messages = self.history + [{"role": "user", "content": input}]
+    return self._request(messages)
+
+  def generate(self, input: str):
+    """
+    Conversational generation (updates history)
+    """
+    user_message = {"role": "user", "content": input}
+    self.history.append(user_message)
+    output = self._request(self.history)
+    assistant_message = {"role": "assistant", "content": output}
+    self.history.append(assistant_message)
+    return output
+
 
 if __name__ == "__main__":
   model = LocalClient(
@@ -72,4 +87,4 @@ if __name__ == "__main__":
     if prompt == "exit()":
       break
     print("Reponse: ")
-    print(model.generate(prompt))
+    print(model.generate_once(prompt))

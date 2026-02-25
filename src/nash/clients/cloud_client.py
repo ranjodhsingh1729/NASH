@@ -26,44 +26,36 @@ class CloudClient:
       {"role": "system","content": self.system_prompt}
     ]
 
-  def _generate(self, input):
-    message = {"role": "user", "content": input}
-    self.history.append(message)
-
+  def _request(self, messages):
     response = self.client.chat.completions.create(
       model = self.model_name,
-      messages = self.history,
+      messages = messages,
       max_tokens = self.max_tokens,
       top_p = self.top_p,
       temperature = self.temperature,
     )
 
-    reply = {
-      "role": "assistant",
-      "content": response.choices[0].message.content
-    }
+    return response.choices[0].message.content
 
-    self.history.pop()
-    return reply["content"]
+  def generate_once(self, input):
+    """
+    One-shot generation (does not update history)
+    """
+    messages = self.history + [{"role": "user", "content": input}]
+    
+    return self._request(messages)
 
   def generate(self, input: str):
-    message = {"role": "user", "content": input}
-    self.history.append(message)
+    """
+    Conversational generation (updates history)
+    """
+    user_message = {"role": "user", "content": input}
+    self.history.append(user_message)
+    output = self._request(self.history)
+    assistant_message = {"role": "assistant", "content": output}
+    self.history.append(assistant_message)
 
-    response = self.client.chat.completions.create(
-      model = self.model_name,
-      messages = self.history,
-      max_tokens = self.max_tokens,
-      top_p = self.top_p,
-      temperature = self.temperature,
-    )
-
-    reply = {
-      "role": "assistant",
-      "content": response.choices[0].message.content
-    }
-    self.history.append(reply)
-    return reply["content"]
+    return output
 
 
 if __name__ == "__main__":
@@ -76,4 +68,4 @@ if __name__ == "__main__":
       prompt = input("Prompt: ")
       if prompt == "exit()":
         break
-      print("Reponse: ", client.generate(prompt))
+      print("Reponse: ", client.generate_once(prompt))
