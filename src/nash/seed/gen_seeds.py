@@ -1,13 +1,14 @@
 import csv
 import json
+import time
 from dataclasses import dataclass
 from typing import Dict, Any
 
 from nash.clients.json_client import JSONClient
 
 
+MAX_RETRY_COUNT = 100
 MODEL_NAME = "openai/gpt-oss-120b"
-
 
 SYSTEM_PROMPT = """
 You are a bash task generation and dataset conversion assistant.
@@ -80,7 +81,10 @@ TASK_JSON_SCHEMA: Dict[str, Any] = {
                 "type": "array",
                 "items": {"type": "string"}
             },
-            "success_condition": {"type": "string"}
+            "success_condition": {
+                "type": "array",
+                "items": {"type": "string"}
+            },
         },
         "required": [
             "task",
@@ -145,8 +149,8 @@ class CSVToJSONLConverter:
 
         with open(output_path, "w") as out_f:
             for row in rows:
-                print("Generating: ", idx)
                 idx += 1
+                print("Generating: ", idx)
 
                 prompt = USER_TEMPLATE.format(
                     prompt=row.prompt.strip(),
@@ -154,10 +158,20 @@ class CSVToJSONLConverter:
                     equivalent=row.equivalent.strip(),
                 )
 
-                obj = self.client.generate_once(prompt)
+                for i in range(MAX_RETRY_COUNT):
+                    try:
+                        obj = self.client.generate_once(prompt)
+                    except Exception as err:
+                        print("Retrying: ", idx)
+                        print("Exception: ", err)
+                        time.sleep(3)
+                    else:
+                        break
 
                 out_f.write(json.dumps(obj))
                 out_f.write("\n")
+
+                time.sleep(3)
 
         return True
 
