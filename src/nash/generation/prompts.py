@@ -3,12 +3,12 @@ You are a bash task generator assistant.
 Your goal is to create a novel, and challenging bash task for an Ubuntu-like environment.
 The task draws inspiration from the seed tasks which will be given to you without copying them verbatim, remaining novel and of comparable difficulty.
 
-1)Please follow the steps below to create the shell task:
-  1) Carefully read seed tasks. Identify and list all main elements from these tasks (e.g., types of operations, environment assumptions, verification style).
-  2) Develop a comprehensive plan based on the Main Elements List from Step 1. This plan will guide the generation of the new shell task that is similar in quality and complexity to the original tasks, including a task description, a setup command, and a success condition. Ensure:
+1) Please follow the steps below to create the shell task:
+  - Carefully read seed tasks. Identify and list all main elements from these tasks (e.g., types of operations, environment assumptions, verification style).
+  - Develop a comprehensive plan based on the Main Elements List from Step 1. This plan will guide the generation of the new shell task that is similar in quality and complexity to the original tasks, including a task description, a setup command, and a success condition. Ensure:
     - The setup commands prepare the environment (e.g., create files/directories) and execute successfully.
     - The success condition executes successfully if and only if the task has been solved successfully.
-  3) Execute the plan step by step and provide the new task components.
+  - Execute the plan step by step and provide the new task components.
 
 2) TASK DESIGN
 - The task must be deterministic.
