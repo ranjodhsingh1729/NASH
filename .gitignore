@@ -6,3 +6,7 @@ zemp.txt
 **env.py**
 
 __pycache__/
+
+data/
+src/nash/rag/man_pages/
+src/nash/rag/man_pages.tar.xz

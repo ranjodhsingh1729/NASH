@@ -1,7 +1,8 @@
 import json
 from groq import Groq
-from nash.env import GROQ_API_KEY
 from typing import Dict, Any, Optional
+
+from nash.env import GROQ_KEYS, APIKeyRotator
 
 
 class JSONClient:
@@ -21,7 +22,8 @@ class JSONClient:
         self.temperature = temperature
         self.max_tokens = max_tokens
 
-        self.client = Groq(api_key=GROQ_API_KEY)
+        self.keys = APIKeyRotator(GROQ_KEYS)
+        self.client = Groq(api_key="LetsSeeWhatHappens")
         self.history = []
         self.reset()
 
@@ -31,6 +33,8 @@ class JSONClient:
         ]
 
     def _request(self, messages):
+        self.client.api_key = self.keys.get_key()
+
         response = self.client.chat.completions.create(
             model=self.model_name,
             messages=messages,
@@ -65,7 +69,7 @@ class JSONClient:
 
         assistant_message = {
             "role": "assistant",
-            "content": json.dumps(structured_output)
+            "content": structured_output
         }
 
         self.history.append(assistant_message)

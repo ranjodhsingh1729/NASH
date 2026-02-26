@@ -180,5 +180,5 @@ if __name__ == "__main__":
     converter = CSVToJSONLConverter()
     converter.convert(
         "../data/NL2SH/InterCode-Corrections/final.csv",
-        "../data/NL2SH/InterCode-Convertion.jsonl"
+        "../data/NL2SH/InterCode-Conversion.jsonl"
     )

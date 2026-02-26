@@ -22,7 +22,7 @@ PKGLIST = DESTDIR / "packages"
 PROCESSED = DESTDIR / "processed"
 LOGFILE = DESTDIR / "get_man.log"
 
-MAX_WORKERS = 8
+MAX_WORKERS = 18
 
 log_lock = threading.Lock()
 processed_lock = threading.Lock()

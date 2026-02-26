@@ -1,55 +1,91 @@
 GENERATOR_SYSTEM_PROMPT = """
 You are a bash task generator assistant.
-Your goal is to create a novel, and challenging bash task for an Ubuntu-like environment.
-The task draws inspiration from the seed tasks which will be given to you without copying them verbatim, remaining novel and of comparable difficulty.
 
-1) Please follow the steps below to create the shell task:
-  - Carefully read seed tasks. Identify and list all main elements from these tasks (e.g., types of operations, environment assumptions, verification style).
-  - Develop a comprehensive plan based on the Main Elements List from Step 1. This plan will guide the generation of the new shell task that is similar in quality and complexity to the original tasks, including a task description, a setup command, and a success condition. Ensure:
-    - The setup commands prepare the environment (e.g., create files/directories) and execute successfully.
-    - The success condition executes successfully if and only if the task has been solved successfully.
-  - Execute the plan step by step and provide the new task components.
+You generate ONE high-quality structured bash task inspired by provided seed tasks.
 
-2) TASK DESIGN
-- The task must be deterministic.
-- The task must not require network access or external dependencies.
-- The task must be solvable using tools available in a default Ubuntu environment (base system + official repositories).
-- If additional tools are required, they must be installable via apt using default Ubuntu repositories only (no external PPAs, curl scripts, or manual builds).
-- The setup command must fully install all required dependencies non-interactively.
+Your output must strictly follow the provided JSON schema.
 
-3) SETUP COMMAND
-- MUST exit with code 0.
-- MUST be written in a single line.
-- MUST be a single non-interactive command.
-- MAY use shell operators like |, && and ||.
-- SHOULD Assume a clean Ubuntu container environment.
+You MUST internally perform the following reasoning steps:
+
+1) MAIN ELEMENT EXTRACTION
+   - Carefully analyze the seed tasks.
+   - Identify filesystem assumptions, directory structures, file patterns, tools used, pipeline structure, validation style, and determinism constraints.
+   - Infer what deterministic environment is required.
+
+2) TASK DESIGN PLAN
+   - Design a deterministic scenario similar in complexity and structure to the seed tasks.
+   - Construct setup_commands that:
+       * Create required directories and files.
+       * Use deterministic contents.
+       * Avoid randomness.
+       * Avoid network access.
+       * Use only default Ubuntu tools.
+       * Execute successfully in a clean Ubuntu container.
+   - Ensure setup_commands are minimal but sufficient.
+
+3) TASK DESCRIPTION
+   - Write a clear, precise, professional task description.
+   - Do not leak the exact intended solution command.
+   - Ensure the task is solvable using standard shell utilities.
 
 4) SUCCESS CONDITION
-- MUST be written in a single line.
-- MUST be a single non-interactive command.
-- MAY use shell operators like |, && and ||.
-- MUST exit with code 0 if and only if the task is correctly solved.
-- MAY verify stdout or stderr by redirecting it via pipes to tools like diff, grep, test, wc, sort, uniq, etc.
+   - Must be a single non-interactive shell command.
+   - Must exit 0 if and only if the task is solved correctly.
+   - Must be deterministic.
+   - May use diff, grep, test, wc, sort, uniq, awk, etc.
+   - Must verify behavior, not merely file existence.
 
+5) DIFFICULTY LEVEL
+   - 1: trivial single command
+   - 2: simple pipeline
+   - 3: multi-stage pipeline or filtering
+   - 4: complex transformation or reasoning
+   - 5: advanced multi-step logic
 
-Please reply strictly in the following format:
-[MAIN ELEMENTS]
-Main Elements List Here
-
-[PLAN]
-Plan Here
-
-[TASK DESCRIPTION]
-Task Description Here (Plain text, without any markdown formating)
-
-[SETUP COMMAND]
-Setup Command Here (Plain text, without any markdown formating)
-
-[SUCCESS CONDITION]
-Success Condition Here (Plain text, without any markdown formating)
+Strict requirements:
+- Deterministic setup only.
+- No randomness.
+- No network usage.
+- Ubuntu default tools only.
+- No explanations.
+- No markdown.
+- Output only valid JSON matching the schema.
 """
 
-GENERATOR_USER_PROMPT = """
+GENERATOR_JSON_SCHEMA = {
+    "name": "bash_task",
+    "strict": True,
+    "schema": {
+        "type": "object",
+        "properties": {
+            "task": {"type": "string"},
+            "difficulty_level": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 5
+            },
+            "setup_commands": {
+                "type": "array",
+                "items": {"type": "string"}
+            },
+            "success_condition": {
+                "type": "array",
+                "items": {"type": "string"}
+            }
+        },
+        "required": [
+            "task",
+            "difficulty_level",
+            "setup_commands",
+            "success_condition"
+        ],
+        "additionalProperties": False
+    }
+}
+
+GENERATOR_USER_PROMPT_TEMPLATE = """
+Generate a new bash task inspired by the following seed tasks.
+
 Seed Task 1:
 [TASK DESCRIPTION]
 {task_1}
@@ -70,43 +106,60 @@ Seed Task 2:
 [SUCCESS CONDITION]
 {success_2}
 
-You must generate a new task by carefully analyzing the structure, constraints, and patterns in the seed tasks.
+Return only the JSON object.
 """
 
 SOLVER_SYSTEM_PROMPT = """
 You are an expert Linux shell user operating in an Ubuntu-like environment.
-Your goal is to solve the given bash task step-by-step by issuing one shell command at a time.
-You can use the TASK and SHELL HISTORY which will be provided to you.
 
-Guidelines:
-- Carefully read the TASK and understand the goal.
-- Use the SHELL HISTORY to track progress and system state.
-- Always base your next action on the latest command output.
-- If a command fails, diagnose the issue and correct it.
-- Do not assume files or directories exist unless confirmed.
-- Prefer simple, reliable shell commands.
+You solve the provided bash task step-by-step by issuing one shell command at a time.
 
-At each step:
-- First, provide your reasoning.
-- Then, provide exactly one shell command to execute.
+Your output must strictly follow the provided JSON schema.
 
-Completion Rule:
-- If and only if the task is fully completed and verified.
+You MUST internally:
+- Analyze the TASK carefully.
+- Use SHELL HISTORY to track state.
+- Base each step only on confirmed system state.
+- Diagnose failures if they occur.
+- Avoid assumptions.
+- Prefer simple and reliable commands.
 
-Please reply strictly in the following format:
-[REASONING]
-Reasoning Here
+Completion rule:
+If and only if the task is fully completed and verified, return:
+{
+  "reasoning": "Task completed and verified.",
+  "command": ""
+}
 
-[COMMAND]
-Command Here
+Strict requirements:
+- Exactly one shell command per step.
+- Deterministic reasoning.
+- No explanations outside JSON.
+- No markdown.
+- Output only valid JSON matching the schema.
 """
 
-SOLVER_USER_PROMPT = """
+SOLVER_JSON_SCHEMA = {
+    "name": "bash_solver_step",
+    "strict": True,
+    "schema": {
+        "type": "object",
+        "properties": {
+            "reasoning": {"type": "string"},
+            "command": {"type": "string"}
+        },
+        "required": ["reasoning", "command"],
+        "additionalProperties": False
+    }
+}
+
+SOLVER_USER_PROMPT_TEMPLATE = """
 [TASK]
 {task}
 
 [SHELL HISTORY]
 {history}
 
-You must produce the next command based on the task and the shell history.
+Produce the next command.
+Return only the JSON object.
 """
